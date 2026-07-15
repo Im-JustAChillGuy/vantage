@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "com.chillguy.vantage.mixin",
+  "plugin": "com.chillguy.vantage.mixin.VantageMixinPlugin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "EntityRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

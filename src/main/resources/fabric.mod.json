@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "vantage",
+  "version": "${version}",
+  "name": "Vantage",
+  "description": "Distance-based entity render culling and level-of-detail system.",
+  "authors": ["JustAChillGuy"],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/vantage",
+    "sources": "https://github.com/Im-JustAChillGuy/vantage"
+  },
+  "license": "CC-BY-SA-4.0",
+  "icon": "assets/vantage/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.chillguy.vantage.VantageClient"
+    ]
+  },
+  "mixins": [
+    "vantage.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.9",
+    "fabric-api": "*",
+    "minecraft": "~1.21.4",
+    "java": ">=21"
+  },
+  "suggests": {
+    "entityculling": "*"
+  }
+}

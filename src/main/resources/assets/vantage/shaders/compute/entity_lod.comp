@@ -1,0 +1,71 @@
+#version 430
+
+// One invocation per entity. Reads camera + entity data, writes a visibility
+// + LOD tier flag per entity. Java side reads this buffer back (or, better
+// long-term, feeds it into an indirect draw count — not implemented yet,
+// see GpuLodManager notes).
+
+layout(local_size_x = 64) in;
+
+struct EntityData {
+    vec4 posRadius;   // xyz = world pos relative to camera, w = bounding radius
+    vec4 flags;       // x = isThreatening (0/1), y-w unused (padding/future use)
+};
+
+layout(std430, binding = 0) readonly buffer EntityInput {
+    EntityData entities[];
+};
+
+// Output: x = visible (0/1), y = lodTier (0=full,1=simplified,2=skip)
+layout(std430, binding = 1) writeonly buffer ResultOutput {
+    vec2 results[];
+};
+
+uniform vec4 frustumPlanes[6]; // camera-relative frustum planes (xyz = normal, w = distance)
+uniform float fullDetailDistSq;
+uniform float simplifiedDistSq;
+uniform float cullDistSq;
+
+bool sphereInFrustum(vec3 pos, float radius) {
+    for (int i = 0; i < 6; i++) {
+        float d = dot(frustumPlanes[i].xyz, pos) + frustumPlanes[i].w;
+        if (d < -radius) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void main() {
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= entities.length()) {
+        return;
+    }
+
+    vec3 relPos = entities[idx].posRadius.xyz;
+    float radius = entities[idx].posRadius.w;
+    bool threatening = entities[idx].flags.x > 0.5;
+
+    float distSq = dot(relPos, relPos);
+
+    if (!sphereInFrustum(relPos, radius)) {
+        results[idx] = vec2(0.0, 2.0); // not visible, treat as skip
+        return;
+    }
+
+    float effectiveCullDistSq = threatening ? cullDistSq * 4.0 : cullDistSq;
+
+    float tier;
+    if (distSq <= fullDetailDistSq) {
+        tier = 0.0;
+    } else if (distSq <= simplifiedDistSq || threatening) {
+        tier = 1.0;
+    } else if (distSq <= effectiveCullDistSq) {
+        tier = 1.0;
+    } else {
+        tier = 2.0;
+    }
+
+    float visible = tier < 2.0 ? 1.0 : 0.0;
+    results[idx] = vec2(visible, tier);
+}
