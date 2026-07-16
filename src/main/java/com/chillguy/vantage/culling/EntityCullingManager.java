@@ -9,11 +9,9 @@ import net.minecraft.util.math.Vec3d;
 
 /**
  * CPU-side entity LOD/culling decisions, evaluated once per entity per frame
- * from the render mixin. This is the honest starting point: a real GPU
- * compute-shader culling pass (indirect draw + visibility buffer) is a much
- * larger project that depends on hooking Sodium/Iris's render graph, which
- * isn't stable across their versions. Ship this first, profile it, then
- * decide if the GPU path is worth the compatibility risk.
+ * from the render mixin. GPU path (GpuLodDispatcher) runs once per tick and
+ * caches results; this class checks that cache first and falls back to a
+ * direct CPU calculation when no GPU result is available.
  */
 public final class EntityCullingManager {
 
@@ -33,6 +31,15 @@ public final class EntityCullingManager {
 		// with a nameplate/glow — those are always visually relevant.
 		if (entity == null || entity.hasCustomName() || entity.isGlowing()) {
 			return Detail.FULL;
+		}
+
+		// GPU pass runs once per tick and caches a result per entity ID —
+		// use it when available (see GpuLodDispatcher for why tick-rate,
+		// not frame-rate). Falls through to the CPU path below otherwise,
+		// e.g. GPU unsupported, or entity too new to have been collected yet.
+		Detail gpuResult = com.chillguy.vantage.gpu.GpuLodDispatcher.INSTANCE.getCached(entity.getId());
+		if (gpuResult != null) {
+			return gpuResult;
 		}
 
 		Vec3d cameraPos = getCameraPos();
