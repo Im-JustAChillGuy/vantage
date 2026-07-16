@@ -1,5 +1,6 @@
 package com.chillguy.vantage.culling;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -23,13 +24,7 @@ public final class EntityCullingManager {
 	private static final double SIMPLIFIED_RANGE_SQ = 48 * 48;    // render, skip minor animation detail
 	private static final double CULL_RANGE_SQ = 96 * 96;          // beyond this: skip non-essential entities entirely
 
-	private Vec3d cameraPos = Vec3d.ZERO;
-
 	private EntityCullingManager() {}
-
-	public void onFrameStart(Camera camera) {
-		this.cameraPos = camera.getPos();
-	}
 
 	public enum Detail { FULL, SIMPLIFIED, SKIP }
 
@@ -40,7 +35,12 @@ public final class EntityCullingManager {
 			return Detail.FULL;
 		}
 
-		double distSq = entity.getPos().squaredDistanceTo(cameraPos);
+		Vec3d cameraPos = getCameraPos();
+		if (cameraPos == null) {
+			return Detail.FULL; // camera not ready yet (e.g. very first frames) — don't cull blindly
+		}
+
+		double distSq = entity.getEntityPos().squaredDistanceTo(cameraPos);
 
 		if (distSq <= FULL_DETAIL_RANGE_SQ) {
 			return Detail.FULL;
@@ -61,6 +61,13 @@ public final class EntityCullingManager {
 		}
 
 		return Detail.SKIP;
+	}
+
+	private Vec3d getCameraPos() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (client == null || client.gameRenderer == null) return null;
+		Camera camera = client.gameRenderer.getCamera();
+		return camera != null ? camera.getCameraPos() : null;
 	}
 
 	private boolean isThreatening(LivingEntity living) {
