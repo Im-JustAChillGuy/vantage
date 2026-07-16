@@ -16,7 +16,6 @@ repositories {
 }
 
 loom {
-	splitEnvironmentSourceSets()
 
 	mods {
 		vantage {
