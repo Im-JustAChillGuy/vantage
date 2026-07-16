@@ -1,7 +1,6 @@
 package com.chillguy.vantage.gpu;
 
 import com.chillguy.vantage.VantageClient;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
 import org.lwjgl.opengl.GL43C;
 import org.lwjgl.system.MemoryUtil;
