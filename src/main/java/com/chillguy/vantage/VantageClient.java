@@ -1,25 +1,14 @@
 package com.chillguy.vantage;
 
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
-import com.chillguy.vantage.culling.EntityCullingManager;
-import com.chillguy.vantage.gpu.GpuLodManager;
-
-public class VantageClient implements ClientModInitializer {
+public class VantageClient implements net.fabricmc.api.ClientModInitializer {
 
 	public static final String MOD_ID = "vantage";
 
 	@Override
 	public void onInitializeClient() {
-		// Refresh camera-relative state once per frame, before entities render.
-		WorldRenderEvents.START.register(context -> {
-			EntityCullingManager.INSTANCE.onFrameStart(context.camera());
-
-			// Lazily init on first frame — GL context is guaranteed to exist
-			// by then. Falls back silently to CPU culling if unsupported.
-			if (!GpuLodManager.INSTANCE.isSupported()) {
-				GpuLodManager.INSTANCE.init();
-			}
-		});
+		// Nothing to register here for now — EntityCullingManager pulls the
+		// camera directly from MinecraftClient when evaluate() is called, so
+		// no render-event hook is needed. GpuLodManager stays lazily
+		// initialized from wherever it's first invoked once that's wired up.
 	}
 }
