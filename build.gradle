@@ -16,7 +16,6 @@ repositories {
 }
 
 loom {
-
 	mods {
 		vantage {
 			sourceSet sourceSets.main
