@@ -4,7 +4,7 @@ Distance/threat-based entity render culling for Fabric 1.21.4.
 
 ## Honest heads-up
 
-While scaffolding this I should flag something I glossed over earlier:
+While scaffolding this I should flag something:
 **entity culling mods already exist** — most notably `tr7zw`'s "Entity Culling"
 mod, which does occlusion + distance culling and is widely used. So this
 isn't literally unprecedented territory. What's still genuinely underexplored
@@ -23,13 +23,6 @@ hooking Sodium/Iris's render graph, which isn't a stable public API).
 - `EntityRendererMixin` — injects into `EntityRenderer#shouldRender` to
   cancel rendering for SKIP-tier entities.
 
-## Build
-
-```
-./gradlew build
-```
-
-Output jar lands in `build/libs/`.
 
 ## Entity Culling compatibility
 
