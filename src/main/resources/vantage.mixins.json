@@ -4,7 +4,8 @@
   "plugin": "com.chillguy.vantage.mixin.VantageMixinPlugin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "EntityRendererMixin"
+    "EntityRendererMixin",
+    "EntityRenderStateMixin"
   ],
   "injectors": {
     "defaultRequire": 1
