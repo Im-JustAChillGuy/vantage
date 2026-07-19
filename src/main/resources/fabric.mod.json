@@ -9,7 +9,7 @@
     "homepage": "https://modrinth.com/mod/vantage",
     "sources": "https://github.com/Im-JustAChillGuy/vantage"
   },
-  "license": "CC-BY-SA-4.0",
+  "license": "MIT",
   "icon": "assets/vantage/icon.png",
   "environment": "client",
   "entrypoints": {
