@@ -2,7 +2,7 @@
   "required": true,
   "package": "com.chillguy.vantage.mixin",
   "plugin": "com.chillguy.vantage.mixin.VantageMixinPlugin",
-  "compatibilityLevel": "JAVA_21",
+  "compatibilityLevel": "JAVA_17",
   "client": [
     "EntityRendererMixin"
   ],
