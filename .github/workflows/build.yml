@@ -2,7 +2,7 @@ name: Build
 
 on:
   push:
-    branches: [ "main", "1.20.1" ]
+    branches: [ "main", "1.20" ]
     paths-ignore:
       - "README.md"
   pull_request:
