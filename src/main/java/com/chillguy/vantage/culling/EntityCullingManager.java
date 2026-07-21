@@ -12,6 +12,11 @@ import net.minecraft.util.math.Vec3d;
  * from the render mixin. GPU path (GpuLodDispatcher) runs once per tick and
  * caches results; this class checks that cache first and falls back to a
  * direct CPU calculation when no GPU result is available.
+ *
+ * 1.20.1 branch: uses Camera#getPos() / Entity#getPos() — the original
+ * method names before the 1.21.9+ rework renamed them to getCameraPos() /
+ * getEntityPos(). Don't copy this file's method names to the main/1.21.11
+ * branch or vice versa.
  */
 public final class EntityCullingManager {
 
@@ -47,7 +52,7 @@ public final class EntityCullingManager {
 			return Detail.FULL; // camera not ready yet (e.g. very first frames) — don't cull blindly
 		}
 
-		double distSq = entity.getEntityPos().squaredDistanceTo(cameraPos);
+		double distSq = entity.getPos().squaredDistanceTo(cameraPos);
 
 		if (distSq <= FULL_DETAIL_RANGE_SQ) {
 			return Detail.FULL;
@@ -74,7 +79,7 @@ public final class EntityCullingManager {
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (client == null || client.gameRenderer == null) return null;
 		Camera camera = client.gameRenderer.getCamera();
-		return camera != null ? camera.getCameraPos() : null;
+		return camera != null ? camera.getPos() : null;
 	}
 
 	private boolean isThreatening(LivingEntity living) {

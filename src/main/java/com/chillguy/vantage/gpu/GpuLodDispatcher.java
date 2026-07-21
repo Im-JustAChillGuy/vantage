@@ -13,6 +13,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Collects nearby entities once per client tick and dispatches them to the
+ * GPU LOD compute pass, caching the result per entity ID for the render
+ * mixin to read.
+ *
+ * 1.20.1 branch: uses Camera#getPos() / Entity#getPos() — the original
+ * method names before the 1.21.9+ rework. Don't copy these calls to the
+ * main/1.21.11 branch or vice versa.
+ */
 public final class GpuLodDispatcher {
 
 	public static final GpuLodDispatcher INSTANCE = new GpuLodDispatcher();
@@ -21,10 +30,10 @@ public final class GpuLodDispatcher {
 	private static final int ENTITY_STRIDE_FLOATS = 8;
 
 	private final Map<Integer, EntityCullingManager.Detail> resultsByEntityId = new HashMap<>();
-	private int debugLogTick = 0;
 
 	private GpuLodDispatcher() {}
 
+	/** Call from a stable per-tick hook (e.g. ClientTickEvents.END_CLIENT_TICK). */
 	public void onClientTick(MinecraftClient client) {
 		if (client.world == null || client.player == null) return;
 
@@ -35,7 +44,7 @@ public final class GpuLodDispatcher {
 
 		Camera camera = client.gameRenderer.getCamera();
 		if (camera == null) return;
-		Vec3d cameraPos = camera.getCameraPos();
+		Vec3d cameraPos = camera.getPos();
 
 		Box collectBox = Box.of(cameraPos, COLLECT_RADIUS * 2, COLLECT_RADIUS * 2, COLLECT_RADIUS * 2);
 		List<Entity> nearby = client.world.getOtherEntities(null, collectBox, e -> true);
@@ -46,7 +55,7 @@ public final class GpuLodDispatcher {
 
 		for (int i = 0; i < count; i++) {
 			Entity entity = nearby.get(i);
-			Vec3d relPos = entity.getEntityPos().subtract(cameraPos);
+			Vec3d relPos = entity.getPos().subtract(cameraPos);
 			int base = i * ENTITY_STRIDE_FLOATS;
 			packed[base] = (float) relPos.x;
 			packed[base + 1] = (float) relPos.y;
@@ -72,14 +81,6 @@ public final class GpuLodDispatcher {
 				: tier < 0.5f ? EntityCullingManager.Detail.FULL
 				: EntityCullingManager.Detail.SIMPLIFIED;
 			resultsByEntityId.put(entityIds[i], detail);
-		}
-
-		debugLogTick++;
-		if (debugLogTick % 20 == 0) { // once a second at 20 TPS — remove once verified
-			long full = resultsByEntityId.values().stream().filter(d -> d == EntityCullingManager.Detail.FULL).count();
-			long simplified = resultsByEntityId.values().stream().filter(d -> d == EntityCullingManager.Detail.SIMPLIFIED).count();
-			long skip = resultsByEntityId.values().stream().filter(d -> d == EntityCullingManager.Detail.SKIP).count();
-			System.out.println("[Vantage DEBUG] entities=" + count + " full=" + full + " simplified=" + simplified + " skip=" + skip);
 		}
 	}
 
