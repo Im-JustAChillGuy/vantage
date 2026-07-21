@@ -8,6 +8,7 @@
   "contact": {
     "homepage": "https://modrinth.com/mod/vantagefabric",
     "sources": "https://github.com/Im-JustAChillGuy/vantage"
+    "issues": "https://github.com/Im-JustAChillGuy/vantage/issues"
   },
   "license": "MIT",
   "icon": "assets/vantage/icon.png",
