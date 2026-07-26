@@ -1,0 +1,24 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+issueTrackerURL="https://github.com/Im-JustAChillGuy/vantage/issues"
+
+[[mods]]
+modId="vantage"
+version="${file.jarVersion}"
+displayName="Vantage"
+description='''Distance-based entity render culling and level-of-detail system.'''
+
+[[dependencies.vantage]]
+    modId="forge"
+    mandatory=true
+    versionRange="[47,)"
+    ordering="NONE"
+    side="CLIENT"
+
+[[dependencies.vantage]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.20.1,1.20.2)"
+    ordering="NONE"
+    side="CLIENT"
