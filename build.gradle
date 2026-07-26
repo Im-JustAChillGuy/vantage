@@ -1,55 +1,27 @@
-plugins {
-	id 'net.fabricmc.fabric-loom-remap' version '1.14.10'
-	id 'maven-publish'
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+', changing: true
+    }
 }
+
+apply plugin: 'net.minecraftforge.gradle'
 
 version = project.mod_version
 group = project.maven_group
 
 base {
-	archivesName = project.archives_base_name
+    archivesName = project.archives_base_name
 }
 
-repositories {
-	// Add mod-specific repos here if you depend on Sodium/Iris APIs later
-	maven { url 'https://maven.parchmentmc.org' }
-}
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
-loom {
-	mods {
-		vantage {
-			sourceSet sourceSets.main
-		}
-	}
+minecraft {
+    mappings channel: 'official', version: project.minecraft_version
 }
 
 dependencies {
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-}
-
-processResources {
-	inputs.property "version", project.version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": project.version
-	}
-}
-
-tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
-}
-
-java {
-	withSourcesJar()
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
-}
-
-jar {
-	from("LICENSE") {
-		rename { "${it}_${project.base.archivesName.get()}" }
-	}
+    minecraft "net.minecraftforge:forge:${project.minecraft_version}-${project.forge_version}"
 }
