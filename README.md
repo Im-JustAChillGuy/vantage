@@ -1,71 +1,62 @@
-# Vantage (starter scaffold)
+# Vantage
 
-Distance/threat-based entity render culling for Fabric 1.21.4.
+A entity rendering optimization mod for [Fabric](https://fabricmc.net). Vantage reduces render load
+from distant or off-screen entities using distance and frustum based
+culling, with a GPU compute-shader LOD pass.
 
-## Honest heads-up
+## Features
 
-While scaffolding this I should flag something:
-**entity culling mods already exist** — most notably `tr7zw`'s "Entity Culling"
-mod, which does occlusion + distance culling and is widely used. So this
-isn't literally unprecedented territory. What's still genuinely underexplored
-is the **GPU compute-shader LOD/culling pipeline** we talked about (#3) — that
-part nobody's shipped in a stable, public MC mod. This scaffold gives you the
-CPU-side distance/threat culling skeleton as a working foundation; the GPU
-compute pass is the actual novel part and is a much bigger lift (needs
-hooking Sodium/Iris's render graph, which isn't a stable public API).
-
-## What's here
-
-- `EntityCullingManager` — pure logic, no rendering code, easy to unit test.
-  Currently: full detail close up, simplified/skip-anim mid-range, full skip
-  far away — with threatening mobs (attacking/targeting you) exempted from
-  being culled so nothing "pops in" unfairly.
-- `EntityRendererMixin` — injects into `EntityRenderer#shouldRender` to
-  cancel rendering for SKIP-tier entities.
+- **LOD system** — Entities get classified into three tiers -  FULL, SIMPLIFIED or SKIP based on distance and camera frustum. For more information, visit the [Features Wiki](https://github.com/Im-JustAChillGuy/vantage/wiki/features) and for developers, click the link on this page or click [here](https://github.com/Im-JustAChillGuy/vantage/wiki).
+- **Threat-aware** — [Mobs attacking or targeting you](https://cdn.modrinth.com/data/cached_images/570214fd1e5b160549ddb449e0fbd00097ab121a_0.webp) are exempt
+  from culling.
+- **GPU compute LOD pass (experimental)** — on supported hardware
+  (OpenGL 4.3+), entity visibility and LOD tier are computed on the GPU
+  once per tick instead of the CPU. Falls back if unsupported. This feature is NOT compatible with [VulkanMod](https://modrinth.com/mod/vulkanmod).
+- **Entity Culling compatible** — Vantage detects tr7zw's [Entity Culling](https://modrinth.com/mod/entityculling) mod at load time and steps back automatically.
 
 
-## Entity Culling compatibility
+<details>
+<summary>Compatibility/Requirements</summary>
 
-Most users already have tr7zw's "Entity Culling" mod, which does the same
-`shouldRender`-level distance culling. Rather than fight over the same
-injection point, `VantageMixinPlugin` checks at load time whether
-`entityculling` is present on the classpath and, if so, **disables our
-render-cull mixin entirely** — Entity Culling keeps doing its job, and our
-mod steps back instead of double-injecting or silently overriding it.
+## Compatibility
 
-Practical effect: if a user has Entity Culling installed, this mod currently
-contributes nothing on its own (by design — no conflict, no duplicate work).
-Its actual value only shows up once you build out the pieces Entity Culling
-doesn't do: the SIMPLIFIED-tier animation reduction and the GPU compute LOD
-pass. Worth keeping in mind — as it stands, most users won't get a
-measurable difference from installing this over what they already have.
+- Fabric 
+- 1.20 - 1.21.11
+- Works alongside [Sodium](https://modrinth.com/mod/sodium) and [Iris](https://modrinth.com/mod/iris)
+- Detects and responds to [Entity Culling](https://modrinth.com/mod/entityculling)
 
-## Known gaps / next steps
 
-1. `shouldRender`'s exact signature can shift between Yarn mapping builds —
-   double check against the mappings you resolve before your first build.
-2. SIMPLIFIED tier currently does nothing extra yet — wire it into specific
-   `LivingEntityRenderer` subclasses to skip limb-swing/animation calculation,
-   not just full renders. This is where real differentiation from Entity
-   Culling would come from.
-3. No tick/AI-side optimization yet — this only saves render-thread cost.
-4. **GPU compute LOD pass — scaffolded, UNTESTED.** See
-   `GpuLodManager` and `assets/vantage/shaders/compute/entity_lod.comp`.
-   This is real compute-shader code following the correct LWJGL 4.3 pattern
-   (SSBO upload -> dispatch -> memory barrier -> readback), but it has not
-   been run against the actual Minecraft render thread. Before trusting it:
-   - Verify it's actually called on the render thread (GL calls off-thread
-     will crash or silently no-op)
-   - Add a GL debug callback and check `entity_lod.comp` output against a
-     known test case (e.g. one entity, hand-computed expected tier)
-   - The readback (`glMapBufferRange` with `GL_MAP_READ_BIT`) causes a
-     CPU-GPU sync stall — profile whether this actually nets a *win* over
-     the CPU path before shipping it. For entity counts this small (hundreds,
-     not millions), it's genuinely possible the GPU round-trip costs more
-     than it saves. This is the open research question — don't assume it's
-     faster, measure it.
-   - No indirect-draw integration yet — results are read back to CPU and
-     would still need wiring into the render mixin's decision, not yet done
-   - No `EntityData` packing code yet (Java side needs to gather entity
-     positions/radii into the float array `dispatch()` expects — not
-     implemented)
+</details>
+
+
+
+<details>
+<summary>Limitations</summary>
+
+## Known limitations
+
+This is an early release. The GPU LOD pass in particular is newer and
+less tested than the CPU path — if you notice entities behaving
+oddly, reporting it helps a LOT.
+
+Feedback and bug reports are welcome. Report them on my [Discord server](https://discord.gg/mfZczRhVqf) or the [Github issues page](https://github.com/Im-JustAChillGuy/vantage/issues)
+
+
+**Note on the 1.20 build:** This version includes all the features, but does not include animation reducer for SIMPLIFIED-tier entities — that feature relies on a render-state hook that doesn't exist yet in 1.20's rendering pipeline.Only fully culled (SKIP-tier) entities see a performance benefit. Full feature parity, including animation reduction, is available on the 1.21 build.
+
+</details>
+
+
+<details>
+<summary>Licence</summary>
+
+## License
+
+Vantage is released under the [MIT License](https://opensource.org/license/mit). You're free to use, copy, modify, merge, publish, distribute, and include it in commercial projects, as long as the original copyright notice stays attached.The software is provided as-is. The full license text is also included in the [repository](https://github.com/Im-JustAChillGuy/vantage).
+</details>
+
+
+
+![A banner with the word "Vantage" written in blue](https://cdn.modrinth.com/data/cached_images/2ba5000e792fc8e27db7b039be5013711c82d51a.png)
+
+Copyright © 2026, ChillGuy.
